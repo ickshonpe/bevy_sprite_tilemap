@@ -15,9 +15,9 @@ fn spawn_grid(
     };
 
     let texture_atlas_image = asset_server.load("test_tileset.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4);
+    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4, None, None);
 
-    commands.spawn_bundle(SpriteBundle {
+    commands.spawn(SpriteBundle {
         sprite: Sprite {
             color: Color::WHITE,
             custom_size: Some(
@@ -45,7 +45,7 @@ fn spawn_grid(
             } else {
                 Color::GRAY
             };
-            commands.spawn_bundle(SpriteBundle {
+            commands.spawn(SpriteBundle {
                 sprite: Sprite {
                     color,
                     custom_size: Some(grid_geometry.tile_size),
@@ -57,7 +57,7 @@ fn spawn_grid(
         }
     }
 
-    commands.spawn_bundle(TextureAtlasTilemapBundle {
+    commands.spawn(TextureAtlasTilemapBundle {
         tilemap: atlas_grid,
         geometry: grid_geometry,
         texture_atlas: texture_atlases.add(texture_atlas),
@@ -68,16 +68,18 @@ fn spawn_grid(
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            width: 300.0,
-            height: 300.0,
-            scale_factor_override: Some(2.0),
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            window: WindowDescriptor {
+                width: 300.0,
+                height: 300.0,
+                scale_factor_override: Some(2.0),
+                ..Default::default()
+            },
             ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        }))
         .add_plugin(SpriteTilemapPlugin)
         .add_startup_system(|mut commands: Commands| {
-            commands.spawn_bundle(Camera2dBundle::default());
+            commands.spawn(Camera2dBundle::default());
         })
         .add_startup_system(spawn_grid)
         .run();

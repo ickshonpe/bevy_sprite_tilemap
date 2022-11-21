@@ -13,7 +13,7 @@ fn spawn_grids(
         sprite.color = Color::DARK_GRAY;
     }
     let texture_atlas_image = asset_server.load("test_tileset.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4);
+    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let grid_geometry = TilemapGeometry {
@@ -21,7 +21,7 @@ fn spawn_grids(
         ..Default::default()
     };
 
-    commands.spawn_bundle(TextureAtlasTilemapBundle {
+    commands.spawn(TextureAtlasTilemapBundle {
         tilemap: atlas_grid_dark.clone(),
         geometry: grid_geometry.clone(),
         view: TilemapView::All,
@@ -29,7 +29,7 @@ fn spawn_grids(
 
         ..Default::default()
     });
-    commands.spawn_bundle(TextureAtlasTilemapBundle {
+    commands.spawn(TextureAtlasTilemapBundle {
         tilemap: atlas_grid.clone(),
         geometry: grid_geometry,
         view: TilemapView::Section {
@@ -49,7 +49,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(SpriteTilemapPlugin)
         .add_startup_system(|mut commands: Commands| {
-            commands.spawn_bundle(Camera2dBundle::default());
+            commands.spawn(Camera2dBundle::default());
         })
         .add_startup_system(spawn_grids)
         .run();

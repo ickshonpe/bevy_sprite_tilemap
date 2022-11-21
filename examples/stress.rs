@@ -20,9 +20,10 @@ fn spawn_grid(
     };
 
     let texture_atlas_image = asset_server.load("test_tileset.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, vec2(16., 16.), 4, 4);
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_atlas_image, vec2(16., 16.), 4, 4, None, None);
 
-    commands.spawn_bundle(TextureAtlasTilemapBundle {
+    commands.spawn(TextureAtlasTilemapBundle {
         tilemap,
         geometry: grid_geometry,
         texture_atlas: texture_atlases.add(texture_atlas),
@@ -33,18 +34,20 @@ fn spawn_grid(
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            width: 1000.,
-            height: 1000.,
-            present_mode: bevy::window::PresentMode::Immediate,
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            window: WindowDescriptor {
+                width: 1000.,
+                height: 1000.,
+                present_mode: bevy::window::PresentMode::Immediate,
+                ..Default::default()
+            },
             ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        }))
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(SpriteTilemapPlugin)
         .add_startup_system(|mut commands: Commands| {
-            commands.spawn_bundle(Camera2dBundle::default());
+            commands.spawn(Camera2dBundle::default());
         })
         .add_startup_system(spawn_grid)
         .run();

@@ -17,7 +17,7 @@ fn spawn_grid(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     };
 
-    commands.spawn_bundle(SpriteTilemapBundle {
+    commands.spawn(SpriteTilemapBundle {
         tilemap,
         geometry,
         transform: Transform::from_translation(100.0 * Vec3::Z),
@@ -27,18 +27,20 @@ fn spawn_grid(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            width: 1000.,
-            height: 1000.,
-            present_mode: bevy::window::PresentMode::Immediate,
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            window: WindowDescriptor {
+                width: 1000.,
+                height: 1000.,
+                present_mode: bevy::window::PresentMode::Immediate,
+                ..Default::default()
+            },
             ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        }))
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(SpriteTilemapPlugin)
         .add_startup_system(|mut commands: Commands| {
-            commands.spawn_bundle(Camera2dBundle::default());
+            commands.spawn(Camera2dBundle::default());
         })
         .add_startup_system(spawn_grid)
         .run();

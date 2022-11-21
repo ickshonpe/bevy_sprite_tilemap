@@ -34,35 +34,14 @@ pub trait ExtractableTilemap: Component + IndexableGrid {
 }
 
 fn iter_grid_coords(
-    visibility: &ComputedVisibility,
-    width: usize,
-    height: usize,
+    grid_width: usize,
+    grid_height: usize,
     view: &TilemapView,
     geometry: &TilemapGeometry,
     mut transform: GlobalTransform,
-    mut f: impl FnMut(GlobalTransform, usize),
-) {
-    if !visibility.is_visible() {
-        return;
-    }
-    let (view_x, view_y, view_width, view_height) = match *view {
-        TilemapView::All => (0usize, 0usize, width, height),
-        TilemapView::Section {
-            x,
-            y,
-            width,
-            height,
-        } => (
-            x,
-            y,
-            width.min(width.saturating_sub(x)),
-            height.min(height.saturating_sub(y)),
-        ),
-    };
-    if view_width == 0 || view_height == 0 {
-        return;
-    }
-    let grid_dimensions = vec2(width as f32, height as f32);
+) -> impl Iterator<Item = (usize, GlobalTransform)> {
+    let [view_x, view_y, view_width, view_height] = view.clip([grid_width, grid_height]);
+    let grid_dimensions = vec2(grid_width as f32, grid_height as f32);
     let grid_size = grid_dimensions * geometry.tile_size;
     let grid_translation = transform.affine().transform_vector3(
         (0.5 * geometry.tile_size - (0.5 + geometry.anchor.as_vec()) * grid_size
@@ -80,7 +59,7 @@ fn iter_grid_coords(
             ))
         .extend(0.),
     );
-    let next_row_skip = width - view_width;
+    let next_row_skip = grid_width - view_width;
     let right = transform
         .affine()
         .transform_vector3(geometry.tile_size.x * Vec3::X);
@@ -93,16 +72,20 @@ fn iter_grid_coords(
     let view_translation =
         Vec3A::from(grid_translation) + view_x as f32 * step_row + view_y as f32 * step_column;
     *transform.translation_mut() += view_translation;
-    let mut grid_index = view_y * width + view_x;
-    for _y in view_y..view_y + view_height {
-        for _x in view_x..view_x + view_width {
-            f(transform, grid_index);
-            *transform.translation_mut() += step_row;
-            grid_index += 1;
+    let mut cell_index = view_y * grid_width + view_x;
+    let mut x = 0;
+    (0..view_width * view_height).map(move |_| {
+        let out = (cell_index, transform);
+        *transform.translation_mut() += step_row;
+        cell_index += 1;
+        x += 1;
+        if x == view_width {
+            x = 0;
+            cell_index += next_row_skip;
+            *transform.translation_mut() += next_row_step;
         }
-        grid_index += next_row_skip;
-        *transform.translation_mut() += next_row_step;
-    }
+        out
+    })
 }
 
 #[allow(clippy::type_complexity)]
@@ -134,21 +117,23 @@ pub fn extract_atlas_tilemap<T>(
     ) in tilemap_query.iter()
     {
         if let Some(texture_atlas) = texture_atlases.get(texture_atlas_handle) {
+            if !visibility.is_visible() {
+                return;
+            }
             iter_grid_coords(
-                visibility,
                 tilemap.width(),
                 tilemap.height(),
                 tilemap_view,
                 tilemap_geometry,
                 *global_transform,
-                |transform, index| {
-                    if let Some(extracted_sprite) =
-                        tilemap.extract_tile(entity, transform, texture_atlas, index)
-                    {
-                        extracted_sprites.sprites.alloc().init(extracted_sprite);
-                    }
-                },
-            );
+            )
+            .for_each(|(index, transform)| {
+                if let Some(extracted_sprite) =
+                    tilemap.extract_tile(entity, transform, texture_atlas, index)
+                {
+                    extracted_sprites.sprites.alloc().init(extracted_sprite);
+                }
+            });
         }
     }
 }
@@ -172,19 +157,21 @@ pub fn extract_tilemap<T>(
     for (entity, tilemap, tilemap_geometry, tilemap_view, global_transform, visibility) in
         tilemap_query.iter()
     {
+        if !visibility.is_visible() {
+            return;
+        }
         iter_grid_coords(
-            visibility,
             tilemap.width(),
             tilemap.height(),
             tilemap_view,
             tilemap_geometry,
             *global_transform,
-            |transform, index| {
-                if let Some(extracted_sprite) = tilemap.extract_tile(entity, transform, index) {
-                    extracted_sprites.sprites.alloc().init(extracted_sprite);
-                }
-            },
-        );
+        )
+        .for_each(|(index, transform)| {
+            if let Some(extracted_sprite) = tilemap.extract_tile(entity, transform, index) {
+                extracted_sprites.sprites.alloc().init(extracted_sprite);
+            }
+        });
     }
 }
 

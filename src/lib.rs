@@ -5,6 +5,7 @@ pub mod geometry;
 pub mod indexing;
 pub mod tile;
 pub mod tilemap;
+pub mod util;
 
 use crate::geometry::*;
 

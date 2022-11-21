@@ -15,7 +15,7 @@ fn spawn_grids(
     let mut atlas_grid = Tilemap::from_fn(4, 4, |x, y| TextureAtlasTile::new(y * 4 + x));
     atlas_grid[15].anchor = Anchor::BottomLeft;
     let texture_atlas_image = asset_server.load("test_tileset.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4);
+    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     commands
         .spawn_bundle(SpatialBundle::default())
@@ -34,7 +34,7 @@ fn spawn_grids(
                     anchor,
                 };
 
-                commands.spawn_bundle(TextureAtlasTilemapBundle {
+                commands.spawn(TextureAtlasTilemapBundle {
                     tilemap: atlas_grid.clone(),
                     geometry: grid_geometry,
                     texture_atlas: texture_atlas_handle.clone(),
@@ -52,7 +52,7 @@ fn spawn_grids(
 }
 
 fn transformation(time: Res<Time>, mut query: Query<&mut Transform, With<Center>>) {
-    let p = (0.5 * time.seconds_since_startup() as f32).sin();
+    let p = (0.5 * time.elapsed_seconds() as f32).sin();
     query.for_each_mut(|mut transform| {
         transform.rotation = Quat::from_rotation_z(std::f32::consts::PI * p);
         transform.scale = (2.5 + p) * Vec2::ONE.extend(0.);
@@ -64,7 +64,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(SpriteTilemapPlugin)
         .add_startup_system(|mut commands: Commands| {
-            commands.spawn_bundle(Camera2dBundle::default());
+            commands.spawn(Camera2dBundle::default());
         })
         .add_startup_system(spawn_grids)
         .add_system(transformation)

@@ -11,7 +11,7 @@ fn spawn_grids(
     let tile_size = 16.0 * Vec2::ONE;
     let atlas_grid = Tilemap::from_fn(4, 4, |x, y| TextureAtlasTile::new(y * 4 + x));
     let texture_atlas_image = asset_server.load("test_tileset.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4);
+    let texture_atlas = TextureAtlas::from_grid(texture_atlas_image, tile_size, 4, 4, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
     for (d, reverse_rows, reverse_columns, anchor) in [
         (vec2(1., 1.), false, false, Anchor::BottomLeft),
@@ -25,7 +25,7 @@ fn spawn_grids(
             reverse_columns,
             anchor,
         };
-        commands.spawn_bundle(TextureAtlasTilemapBundle {
+        commands.spawn(TextureAtlasTilemapBundle {
             tilemap: atlas_grid.clone(),
             geometry: grid_geometry,
             texture_atlas: texture_atlas_handle.clone(),
@@ -40,7 +40,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(SpriteTilemapPlugin)
         .add_startup_system(|mut commands: Commands| {
-            commands.spawn_bundle(Camera2dBundle::default());
+            commands.spawn(Camera2dBundle::default());
         })
         .add_startup_system(spawn_grids)
         .run();

@@ -9,7 +9,7 @@ repository = "https://github.com/ickshonpe/bevy_sprite_tilemap"
 description = "draw tilemaps with bevy sprites"
 
 [dependencies.bevy]
-version = "0.8"
+version = "0.9"
 default-features = false
 features = ["render", "bevy_asset"]
 
@@ -17,4 +17,4 @@ features = ["render", "bevy_asset"]
 version = "0.1.5"
 
 [dev-dependencies]
-bevy = "0.8"
+bevy = "0.9"
